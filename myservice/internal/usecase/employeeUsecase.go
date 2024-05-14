@@ -44,7 +44,7 @@ func GetEmployee(req entity.GetEmployeeRequest) (entity.GetEmployeeResponse, err
 	log.Printf("Get Employee - Calling to Repository\n")
 	employee, err := repository.ReadEmployee(req.EmployeeID)
 	if err != nil {
-		log.Printf("Get Employee - ERROR calling to Repository: %s\n", err)
+		log.Printf("Get Employee:%s - ERROR calling to Repository: %s\n", req.EmployeeID, err)
 		resp.Status = "Aborted"
 		return resp, err
 	}
@@ -81,7 +81,7 @@ func UpdateEmployee(req entity.UpdateEmployeeRequest) (entity.PostEmployeeRespon
 	log.Printf("Update Employee - Calling to Repository\n")
 	err := repository.UpdateEmployee(req.EmployeeID, emp)
 	if err != nil {
-		log.Printf("Update Employee - ERROR calling to Repository: %s\n", err)
+		log.Printf("Update Employee :%s- ERROR calling to Repository: %s\n", req.EmployeeID, err)
 		resp.Status = "Aborted"
 		return resp, err
 	}
@@ -98,7 +98,7 @@ func DeleteEmployee(req entity.DeleteEmployeeRequest) (entity.DeleteEmployeeResp
 	log.Printf("Delete Employee - Calling to Repository\n")
 	err := repository.DeleteEmployee(req.EmployeeID)
 	if err != nil {
-		log.Printf("Delete Employee - ERROR calling to Repository: %s\n", err)
+		log.Printf("Delete Employee: %s - ERROR calling to Repository: %s\n", req.EmployeeID, err)
 		resp.Status = "Aborted"
 		return resp, err
 	}
