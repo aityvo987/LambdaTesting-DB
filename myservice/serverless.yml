@@ -1,0 +1,57 @@
+service: firstapi
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: provided.al2
+  architecture: arm64
+  region: ap-southeast-1
+
+package:
+  individually: true
+  
+  patterns:
+    - '!./**'
+    - ./bin/**
+
+functions:
+  getEmployees:
+    handler: bootstrap
+    package:
+      artifact: bin/getEmployees.zip
+    events:
+      - http:
+          path: employees
+          method: get
+  getEmployee:
+    handler: bootstrap
+    package:
+      artifact: bin/getEmployee.zip
+    events:
+      - http:
+          path: employee
+          method: get
+  postEmployee:
+    handler: bootstrap
+    package:
+      artifact: bin/postEmployee.zip
+    events:
+      - http:
+          path: employee
+          method: post
+  deleteEmployee:
+    handler: bootstrap
+    package:
+      artifact: bin/deleteEmployee.zip
+    events:
+      - http:
+          path: employee
+          method: delete
+  updateEmployee:
+    handler: bootstrap
+    package:
+      artifact: bin/putEmployee.zip
+    events:
+      - http:
+          path: employee
+          method: put
