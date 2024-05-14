@@ -52,7 +52,7 @@ func ReadEmployee(id string) (model.Employee, error) {
 		log.Printf("Error connect to database in Read Employee %s: %s\n", id, err)
 		return e, err
 	}
-	defer db.Close()
+
 	row := db.QueryRow("SELECT name,dob, email,phone,citizenId,address FROM Employee WHERE id=$1", e.Id)
 	err = row.Scan(&e.Name, &e.Dob, &e.Email, &e.Phone, &e.CitizenId, &e.Address)
 	if err != nil {
@@ -67,7 +67,7 @@ func ReadAllEmployee() ([]model.Employee, error) {
 		log.Printf("Error connect to database in Read Employees: %s\n", err)
 		return employees, err
 	}
-	defer db.Close()
+
 	log.Printf("Getting Employees \n")
 	rows, err := db.Query("SELECT id, name,dob, email,phone,citizenId,address FROM Employee")
 	if err != nil {
@@ -111,7 +111,7 @@ func UpdateEmployee(id string, e model.Employee) error {
 		log.Printf("Error connect to database in Update Employee %s: %s\n", id, err)
 		return err
 	}
-	defer db.Close()
+
 	_, err = db.Exec("UPDATE Employee SET name=$1, dob=$2, email=$3, phone=$4, citizenId=$5, address=$6 WHERE id=$7", e.Name, e.Dob, e.Email, e.Phone, e.CitizenId, e.Address, id)
 	if err != nil {
 		log.Printf("Error insert to database in Create Employee %s: %s\n", id, err)

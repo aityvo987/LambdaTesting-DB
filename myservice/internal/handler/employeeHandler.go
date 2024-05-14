@@ -1,14 +1,16 @@
 package handler
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
+	"encoding/json"
 	"net/http"
 
 	entity "lambda-test/internal/entity"
+	pkg "lambda-test/internal/pkg"
 	usecase "lambda-test/internal/usecase"
 	"log"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,85 +18,192 @@ type EmployeeHandler interface {
 	GetEmployees(c *gin.Context)
 }
 
-func GetEmployees(c *gin.Context) {
-	body := entity.GetEmployeesRequest{}
-	if err := c.BindJSON(&body); err != nil {
-		log.Printf("Get Employees - ERROR Reading Body: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Error: %s", err)})
-		return
-	}
-	resp, err := usecase.GetEmployees(body)
-	if err != nil {
-		log.Printf("Get Employees - ERROR calling to Usecase: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Cannot get Employees: %s", err)})
-		return
-	}
-	c.IndentedJSON(http.StatusOK, resp)
-}
-func GetEmployee(c *gin.Context) {
-	body := entity.GetEmployeeRequest{}
-	if err := c.BindJSON(&body); err != nil {
-		log.Printf("Get Employee - ERROR Reading Body: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Error: %s", err)})
-		return
-	}
-	resp, err := usecase.GetEmployee(body)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Printf("Get Employee - ERROR calling to Usecase: %s\n", err)
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Employee not found"})
-			return
+func GetEmployees(ctx context.Context,
+	req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		resp = events.APIGatewayProxyResponse{
+			StatusCode: 200,
 		}
-		log.Printf("Get Employee - ERROR calling to Usecase: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Cannot get employee ID: %v %s", body.EmployeeID, err)})
-		return
-	}
-	c.IndentedJSON(http.StatusOK, resp)
-}
-func CreateEmployee(c *gin.Context) {
-	body := entity.CreateEmployeeRequest{}
-	if err := c.BindJSON(&body); err != nil {
-		log.Printf("Create Employee - ERROR Reading Body: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Error: %s", err)})
-		return
-	}
-	resp, err := usecase.CreateEmployee(body)
+		tranReq = entity.GetEmployeesRequest{}
+		err     error
+	)
+
+	err = json.Unmarshal([]byte(req.Body), &tranReq)
 	if err != nil {
-		log.Printf("Create Employee - ERROR calling to Usecase: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Cannot create new employee: %s", err)})
-		return
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
 	}
-	c.IndentedJSON(http.StatusCreated, resp)
+
+	respGen, err := usecase.GetEmployees(tranReq)
+	if err != nil {
+		log.Printf("Get Employee - ERROR In Get in Usecase: %s\n", err)
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+	resp.StatusCode = http.StatusOK
+	resp.Body = pkg.Response(entity.AppResponse{
+		Error:     err,
+		RequestID: tranReq.RequestID,
+		Data:      respGen,
+	})
+	return resp, err
+
 }
 
-func UpdateEmployee(c *gin.Context) {
-	body := entity.UpdateEmployeeRequest{}
-	if err := c.BindJSON(&body); err != nil {
-		log.Printf("Update Employee - ERROR Reading Body: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Error: %s", err)})
-		return
-	}
-	resp, err := usecase.UpdateEmployee(body)
+func GetEmployee(ctx context.Context,
+	req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		resp = events.APIGatewayProxyResponse{
+			StatusCode: 200,
+		}
+		tranReq = entity.GetEmployeeRequest{}
+		err     error
+	)
+
+	err = json.Unmarshal([]byte(req.Body), &tranReq)
 	if err != nil {
-		log.Printf("Update Employee - ERROR calling to Usecase: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Cannot update employee ID: %v %s", body.EmployeeID, err)})
-		return
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
 	}
-	c.IndentedJSON(http.StatusCreated, resp)
+
+	respGen, err := usecase.GetEmployee(tranReq)
+	if err != nil {
+		log.Printf("Get Employee - ERROR In Get in Usecase: %s\n", err)
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+	resp.StatusCode = http.StatusOK
+	resp.Body = pkg.Response(entity.AppResponse{
+		Error:     err,
+		RequestID: tranReq.RequestID,
+		Data:      respGen,
+	})
+	return resp, err
+
 }
 
-func DeleteEmployee(c *gin.Context) {
-	body := entity.DeleteEmployeeRequest{}
-	if err := c.BindJSON(&body); err != nil {
-		log.Printf("Delete Employee - ERROR Reading Body: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Error: %s", err)})
-		return
-	}
-	resp, err := usecase.DeleteEmployee(body)
+func CreateEmployee(ctx context.Context,
+	req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		resp = events.APIGatewayProxyResponse{
+			StatusCode: 200,
+		}
+		tranReq = entity.CreateEmployeeRequest{}
+		err     error
+	)
+
+	err = json.Unmarshal([]byte(req.Body), &tranReq)
 	if err != nil {
-		log.Printf("Delete Employee - ERROR calling to Usecase: %s\n", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("Cannot delete employee: %s", err)})
-		return
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
 	}
-	c.IndentedJSON(http.StatusCreated, resp)
+
+	respGen, err := usecase.CreateEmployee(tranReq)
+	if err != nil {
+		log.Printf("Get Employee - ERROR In Get in Usecase: %s\n", err)
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+	resp.StatusCode = http.StatusOK
+	resp.Body = pkg.Response(entity.AppResponse{
+		Error:     err,
+		RequestID: tranReq.RequestID,
+		Data:      respGen,
+	})
+	return resp, err
+
+}
+
+func UpdateEmployee(ctx context.Context,
+	req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		resp = events.APIGatewayProxyResponse{
+			StatusCode: 200,
+		}
+		tranReq = entity.UpdateEmployeeRequest{}
+		err     error
+	)
+
+	err = json.Unmarshal([]byte(req.Body), &tranReq)
+	if err != nil {
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+
+	respGen, err := usecase.UpdateEmployee(tranReq)
+	if err != nil {
+		log.Printf("Get Employee - ERROR In Get in Usecase: %s\n", err)
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+	resp.StatusCode = http.StatusOK
+	resp.Body = pkg.Response(entity.AppResponse{
+		Error:     err,
+		RequestID: tranReq.RequestID,
+		Data:      respGen,
+	})
+	return resp, err
+
+}
+
+func DeleteEmployee(ctx context.Context,
+	req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		resp = events.APIGatewayProxyResponse{
+			StatusCode: 200,
+		}
+		tranReq = entity.DeleteEmployeeRequest{}
+		err     error
+	)
+
+	err = json.Unmarshal([]byte(req.Body), &tranReq)
+	if err != nil {
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+
+	respGen, err := usecase.DeleteEmployee(tranReq)
+	if err != nil {
+		log.Printf("Get Employee - ERROR In Get in Usecase: %s\n", err)
+		resp.Body = pkg.Response(entity.AppResponse{
+			Error:     err,
+			RequestID: tranReq.RequestID,
+		})
+		return resp, nil
+	}
+	resp.StatusCode = http.StatusOK
+	resp.Body = pkg.Response(entity.AppResponse{
+		Error:     err,
+		RequestID: tranReq.RequestID,
+		Data:      respGen,
+	})
+	return resp, err
+
 }

@@ -18,3 +18,20 @@ build:
 	go build -o bin/getEmployees/bootstrap functions/getEmployees/main.go
 
 
+# build-linux:
+# 	env GOARCH=arm64 CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/postEmployee/bootstrap functions/postEmployee/main.go  
+# 	env GOARCH=arm64 CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/putEmployee/bootstrap functions/putEmployee/main.go  
+# 	env GOARCH=arm64 CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/deleteEmployee/bootstrap functions/deleteEmployee/main.go
+# 	env GOARCH=arm64 CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/getEmployee/bootstrap functions/getEmployee/main.go      
+# 	env GOARCH=arm64 CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/getEmployees/bootstrap functions/getEmployees/main.go
+
+
+# deploy-linux: clean build
+# 	sls deploy --verbose
+
+# zipfile-linux:
+# 	zip -j bin/postEmployee.zip bin/postEmployee/bootstrap
+# 	zip -j bin/putEmployee.zip bin/putEmployee/bootstrap
+# 	zip -j bin/deleteEmployee.zip bin/deleteEmployee/bootstrap
+# 	zip -j bin/getEmployee.zip bin/getEmployee/bootstrap
+# 	zip -j bin/getEmployees.zip bin/getEmployees/bootstrap

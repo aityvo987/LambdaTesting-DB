@@ -32,6 +32,15 @@ type PostEmployeeResponse struct {
 	Status      string    `json:"status"`
 }
 
+type AppResponse struct {
+	RequestID   string      `json:"requestId" `
+	ChannelID   string      `json:"channelId" `
+	CreatedTime time.Time   `json:"createdTime"`
+	Status      string      `json:"status"`
+	Error       error       `json:"error"`
+	Data        interface{} `json:"data"`
+}
+
 // type UpdateEmployeeResponse struct {
 // 	RequestID   string    `json:"requestId" `
 // 	CreatedTime time.Time `json:"createdTime"`

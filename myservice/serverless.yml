@@ -21,23 +21,23 @@ functions:
       artifact: bin/getEmployees.zip
     events:
       - http:
-          path: employees
-          method: get
+          path: get-employee
+          method: post
   getEmployee:
     handler: bootstrap
     package:
       artifact: bin/getEmployee.zip
     events:
       - http:
-          path: employee
-          method: get
+          path: get-a-employee
+          method: post
   postEmployee:
     handler: bootstrap
     package:
       artifact: bin/postEmployee.zip
     events:
       - http:
-          path: employee
+          path: create-employee
           method: post
   deleteEmployee:
     handler: bootstrap
@@ -45,13 +45,13 @@ functions:
       artifact: bin/deleteEmployee.zip
     events:
       - http:
-          path: employee
-          method: delete
+          path: delete-employee
+          method: post
   updateEmployee:
     handler: bootstrap
     package:
       artifact: bin/putEmployee.zip
     events:
       - http:
-          path: employee
-          method: put
+          path: update-employee
+          method: post
