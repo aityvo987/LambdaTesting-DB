@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Employee struct {
-	Id        int       `json:"id"`
+	Id        string    `json:"id"`
 	Name      string    `json:"name"`
 	Dob       time.Time `json:"dob"`
 	Email     string    `json:"email"`

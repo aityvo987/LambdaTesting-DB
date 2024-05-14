@@ -46,14 +46,15 @@ func ConnectDB() (*sql.DB, error) {
 
 func ReadEmployee(id string) (model.Employee, error) {
 	var e model.Employee
+	e.Id = id
 	db, err := ConnectDB()
 	if err != nil {
 		log.Printf("Error connect to database in Read Employee %s: %s\n", id, err)
 		return e, err
 	}
 	defer db.Close()
-	row := db.QueryRow("SELECT id, name,dob, email,phone,citizenId,address FROM Employee WHERE id=$1", id)
-	err = row.Scan(&e.Id, &e.Name, &e.Dob, &e.Email, &e.Phone, &e.CitizenId, &e.Address)
+	row := db.QueryRow("SELECT name,dob, email,phone,citizenId,address FROM Employee WHERE id=$1", e.Id)
+	err = row.Scan(&e.Name, &e.Dob, &e.Email, &e.Phone, &e.CitizenId, &e.Address)
 	if err != nil {
 		log.Printf("Error get Employee %s, %s\n", id, err)
 	}
