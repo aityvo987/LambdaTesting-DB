@@ -26,10 +26,6 @@ type UpdateEmployeeRequest struct {
 	Data        EmployeeData `json:"data" validate:"required"`
 }
 
-type PostEmployeeResponse struct {
-	Error error `json:"error"`
-}
-
 type AppResponse struct {
 	RequestID   string      `json:"requestId" `
 	ChannelID   string      `json:"channelId" `

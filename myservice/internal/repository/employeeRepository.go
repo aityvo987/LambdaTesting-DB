@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	_ "github.com/lib/pq"
-	"gorm.io/gorm"
 )
 
 const (
@@ -52,7 +51,7 @@ func findEmployee(db *sql.DB, id string) error {
 	err := row.Scan(&existingID)
 	if err != nil {
 		log.Printf("Error in finding Emmployee ID %s: %s\n", id, err)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = errors.New(pkg.RecNoF.Code())
 			return err
 		}
@@ -75,7 +74,7 @@ func ReadEmployee(id string) (model.Employee, error) {
 	err = row.Scan(&e.Name, &e.Dob, &e.Email, &e.Phone, &e.CitizenId, &e.Address)
 	if err != nil {
 		log.Printf("Error get Employee %s, %s\n", id, err)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = errors.New(pkg.RecNoF.Code())
 			return e, err
 		}
@@ -96,7 +95,7 @@ func ReadAllEmployee() ([]model.Employee, error) {
 	rows, err := db.Query("SELECT id, name,dob, email,phone,citizenId,address FROM Employee")
 	if err != nil {
 		log.Printf("Error get Employees %s\n", err)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = errors.New(pkg.RecNoF.Code())
 			return nil, err
 		}
@@ -143,7 +142,7 @@ func UpdateEmployee(id string, e model.Employee) error {
 		err = errors.New(pkg.DbError.Code())
 		return err
 	}
-	err = findEmployee(db, e.Id)
+	err = findEmployee(db, id)
 	if err != nil {
 		return err
 	}
