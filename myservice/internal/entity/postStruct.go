@@ -27,16 +27,13 @@ type UpdateEmployeeRequest struct {
 }
 
 type PostEmployeeResponse struct {
-	RequestID   string    `json:"requestId" `
-	CreatedTime time.Time `json:"createdTime"`
-	Status      string    `json:"status"`
+	Error error `json:"error"`
 }
 
 type AppResponse struct {
 	RequestID   string      `json:"requestId" `
 	ChannelID   string      `json:"channelId" `
 	CreatedTime time.Time   `json:"createdTime"`
-	Status      string      `json:"status"`
 	Error       error       `json:"error"`
 	Data        interface{} `json:"data"`
 }

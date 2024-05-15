@@ -2,12 +2,15 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	pkg "lambda-test/internal/pkg"
 	model "lambda-test/internal/repository/model"
 	"log"
 	"sync"
 
 	_ "github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 const (
@@ -33,15 +36,30 @@ type EmployeeRepository interface {
 
 func ConnectDB() (*sql.DB, error) {
 	once.Do(func() {
-		log.Printf("Connecting to database\n")
 		db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname))
 		if err != nil {
 			log.Printf("Error connect to database: %s\n", err)
+			return
 		}
 		database = db
-		log.Printf("Fnish connecting to database\n")
 	})
 	return database, nil
+}
+
+func findEmployee(db *sql.DB, id string) error {
+	row := db.QueryRow("SELECT id FROM Employee WHERE id = $1", id)
+	var existingID int
+	err := row.Scan(&existingID)
+	if err != nil {
+		log.Printf("Error in finding Emmployee ID %s: %s\n", id, err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = errors.New(pkg.RecNoF.Code())
+			return err
+		}
+		err = errors.New(pkg.DbError.Code())
+		return err
+	}
+	return nil
 }
 
 func ReadEmployee(id string) (model.Employee, error) {
@@ -50,13 +68,19 @@ func ReadEmployee(id string) (model.Employee, error) {
 	db, err := ConnectDB()
 	if err != nil {
 		log.Printf("Error connect to database in Read Employee %s: %s\n", id, err)
+		err = errors.New(pkg.DbError.Code())
 		return e, err
 	}
-
 	row := db.QueryRow("SELECT name,dob, email,phone,citizenId,address FROM Employee WHERE id=$1", e.Id)
 	err = row.Scan(&e.Name, &e.Dob, &e.Email, &e.Phone, &e.CitizenId, &e.Address)
 	if err != nil {
 		log.Printf("Error get Employee %s, %s\n", id, err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = errors.New(pkg.RecNoF.Code())
+			return e, err
+		}
+		err = errors.New(pkg.DbError.Code())
+		return e, err
 	}
 	return e, nil
 }
@@ -65,43 +89,50 @@ func ReadAllEmployee() ([]model.Employee, error) {
 	db, err := ConnectDB()
 	if err != nil {
 		log.Printf("Error connect to database in Read Employees: %s\n", err)
+		err = errors.New(pkg.DbError.Code())
 		return employees, err
 	}
 
-	log.Printf("Getting Employees \n")
 	rows, err := db.Query("SELECT id, name,dob, email,phone,citizenId,address FROM Employee")
 	if err != nil {
 		log.Printf("Error get Employees %s\n", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = errors.New(pkg.RecNoF.Code())
+			return nil, err
+		}
+
+		err = errors.New(pkg.DbError.Code())
 		return nil, err
 	}
 	defer rows.Close()
-
+	count := 0
 	for rows.Next() {
 		var e model.Employee
 		err := rows.Scan(&e.Id, &e.Name, &e.Dob, &e.Email, &e.Phone, &e.CitizenId, &e.Address)
 		if err != nil {
+			log.Printf("Error scanning Employee number %v: %s\n", count, err)
+			count++
+			err = errors.New(pkg.DbError.Code())
 			return nil, err
 		}
-		log.Printf("Repo - Getting Employee %v\n", e.Id)
 		employees = append(employees, e)
 	}
 	return employees, nil
 }
 
 func CreateEmployee(e model.Employee) error {
-	var id int
 	db, err := ConnectDB()
 	if err != nil {
 		log.Printf("Error connect to database in Create Employee: %s\n", err)
+		err = errors.New(pkg.DbError.Code())
 		return err
 	}
-	log.Printf("Inserting database in Create Employee: \n")
-	err = db.QueryRow("INSERT INTO Employee(name, dob, email, phone, citizenId, address) VALUES($1, $2,$3,$4,$5,$6) RETURNING id", e.Name, e.Dob, e.Email, e.Phone, e.CitizenId, e.Address).Scan(&id)
+	_, err = db.Exec("INSERT INTO Employee(name, dob, email, phone, citizenId, address) VALUES($1, $2,$3,$4,$5,$6)", e.Name, e.Dob, e.Email, e.Phone, e.CitizenId, e.Address)
 	if err != nil {
 		log.Printf("Error insert to database in Create Employee: %s\n", err)
+		err = errors.New(pkg.DbError.Code())
 		return err
 	}
-	log.Printf("Finish inserting database in Create Employee: \n")
 	return nil
 }
 
@@ -109,12 +140,17 @@ func UpdateEmployee(id string, e model.Employee) error {
 	db, err := ConnectDB()
 	if err != nil {
 		log.Printf("Error connect to database in Update Employee %s: %s\n", id, err)
+		err = errors.New(pkg.DbError.Code())
 		return err
 	}
-
+	err = findEmployee(db, e.Id)
+	if err != nil {
+		return err
+	}
 	_, err = db.Exec("UPDATE Employee SET name=$1, dob=$2, email=$3, phone=$4, citizenId=$5, address=$6 WHERE id=$7", e.Name, e.Dob, e.Email, e.Phone, e.CitizenId, e.Address, id)
 	if err != nil {
 		log.Printf("Error insert to database in Create Employee %s: %s\n", id, err)
+		err = errors.New(pkg.DbError.Code())
 		return err
 	}
 	return nil
@@ -124,11 +160,17 @@ func DeleteEmployee(id string) error {
 	db, err := ConnectDB()
 	if err != nil {
 		log.Printf("Error connect to database in Delete Employee %s: %s\n", id, err)
+		err = errors.New(pkg.DbError.Code())
+		return err
+	}
+	err = findEmployee(db, id)
+	if err != nil {
 		return err
 	}
 	_, err = db.Exec("DELETE FROM EMPLOYEE WHERE id=$1", id)
 	if err != nil {
 		log.Printf("Error insert to database in Delete Employee %s: %s\n", id, err)
+		err = errors.New(pkg.DbError.Code())
 		return err
 	}
 	return nil

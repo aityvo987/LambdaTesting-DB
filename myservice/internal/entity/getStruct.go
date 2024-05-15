@@ -17,15 +17,9 @@ type GetEmployeeRequest struct {
 }
 
 type GetEmployeesResponse struct {
-	RequestID   string           `json:"requestId" `
-	CreatedTime time.Time        `json:"createdTime"`
-	Status      string           `json:"status"`
-	Employees   []model.Employee `json:"employees"`
+	Employees []model.Employee `json:"employees"`
 }
 
 type GetEmployeeResponse struct {
-	RequestID   string         `json:"requestId" `
-	CreatedTime time.Time      `json:"createdTime"`
-	Status      string         `json:"status"`
-	Employee    model.Employee `json:"employeeId" `
+	Employee model.Employee `json:"employee" `
 }

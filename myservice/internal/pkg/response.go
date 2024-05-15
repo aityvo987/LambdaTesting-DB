@@ -8,27 +8,12 @@ import (
 	"time"
 )
 
-type HttpResponse struct {
-	ChannelID string
-	Uuid      string
-	Err       error
-	Time      time.Time
-	Data      interface{}
-}
-
 func bodyResponse(respBody entity.AppResponse) []byte {
 	mapResp := make(map[string]interface{})
 	mapResp["responseId"] = respBody.RequestID
 	mapResp["responseTime"] = respBody.CreatedTime
-	mapResp["responseError"] = respBody.Error
-	// switch bodyInput.ChannelID {
-	// // case string(common.ChannelC2c):
-	// // 	mapResp["responseCode"] = common.ParseError(bodyInput.Err).Code()
-	// // 	mapResp["responseMessage"] = common.ParseError(bodyInput.Err).MessageC2c()
-	// // default:
-	// // 	mapResp["responseCode"] = common.ParseError(bodyInput.Err).Code()
-	// // 	mapResp["responseMessage"] = common.ParseError(bodyInput.Err).Message()
-	// // }
+	mapResp["responseCode"] = ParseError(respBody.Error).Code()
+	mapResp["responseMessage"] = ParseError(respBody.Error).Message()
 
 	body, errMarshal := json.Marshal(mapResp)
 	if errMarshal != nil {
@@ -52,10 +37,8 @@ func Response(respBody entity.AppResponse) string {
 		return buf.String()
 	}
 	mapRes := map[string]interface{}{
-		"responseId":      respBody.RequestID,
-		"responseCode":    "00",
-		"responseMessage": "successfully",
-		"responseTime":    respBody.CreatedTime,
+		"responseId":   respBody.RequestID,
+		"responseTime": respBody.CreatedTime,
 	}
 	if respBody.Data != nil {
 		mapRes["data"] = respBody.Data
